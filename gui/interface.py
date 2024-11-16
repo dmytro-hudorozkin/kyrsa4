@@ -155,7 +155,7 @@ class PharmacyAppInterface:
         new_medicine_window = ttk.Toplevel(self.root)
         new_medicine_window.title("Додати ліки")
         new_medicine_window.configure(bg="#4B0082")
-        new_medicine_window.geometry("500x300")
+        new_medicine_window.geometry("500x250")
         
         x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 250
         y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 150
