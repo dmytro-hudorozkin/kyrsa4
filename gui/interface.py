@@ -12,7 +12,6 @@ class PharmacyAppInterface:
         self.root = root
         self.root.title("Облік ліків")
 
-        # Розміри головного вікна та його позиція
         window_width = 900
         window_height = 600
         self.root.geometry(f"{window_width}x{window_height}")
@@ -22,16 +21,14 @@ class PharmacyAppInterface:
         y = (screen_height // 2) - (window_height // 2)
         self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
-        # Встановлюємо тему для всього додатку
-        self.root.style = ttk.Style("cosmo")
-        self.root.configure(bg="#4B0082")  # Фон
+        style = ttk.Style("cosmo")
+        self.root.configure(bg="#4B0082")
 
         self.medicine_list = MedicineList()
         self.load_medicines_from_file()
         self.init_main_menu()
 
     def load_medicines_from_file(self):
-        # Завантажуємо дані про ліки з файлу, якщо він існує
         if os.path.exists("medicines.json"):
             with open("medicines.json", "r", encoding="utf-8") as f:
                 medicines_data = json.load(f)
@@ -47,7 +44,6 @@ class PharmacyAppInterface:
             self.medicine_list.medicines = []
 
     def save_medicines_to_file(self):
-        # Зберігаємо дані про ліки у файл
         medicines_data = [
             {
                 "name": med.name,
@@ -60,7 +56,6 @@ class PharmacyAppInterface:
             json.dump(medicines_data, f, indent=4, ensure_ascii=False)
 
     def init_main_menu(self):
-        # Ініціалізація головного меню
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -83,7 +78,6 @@ class PharmacyAppInterface:
             button.pack(pady=10, ipadx=20, ipady=15)
 
     def open_stock_page(self):
-        # Відкриваємо сторінку "Склад"
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -97,7 +91,6 @@ class PharmacyAppInterface:
         search_entry.insert(0, "Пошук")
         search_entry.pack(side="left", fill="x", expand=True)
 
-        # Обробники для пошуку
         def on_focus_in(event):
             if search_entry.get() == "Пошук":
                 search_entry.delete(0, "end")
@@ -148,28 +141,24 @@ class PharmacyAppInterface:
         back_button.pack(side="right", padx=10)
 
     def load_medicines_to_table(self):
-        # Завантажуємо ліки в таблицю
         self.stock_table.delete(*self.stock_table.get_children())
         for medicine in self.medicine_list.get_medicines():
-            self.stock_table.insert("", "end", values=(medicine.name, medicine.quantity, medicine.price, medicine.description))
+            self.stock_table.insert("", "end", iid=medicine.name, values=(medicine.name, medicine.quantity, medicine.price, medicine.description))
 
     def search_medicine(self, query):
-        # Пошук ліків за запитом
         filtered_medicines = [med for med in self.medicine_list.get_medicines() if query.lower() in med.name.lower()]
         self.stock_table.delete(*self.stock_table.get_children())
-        for medicine in filtered_medicines:
-            self.stock_table.insert("", "end", values=(medicine.name, medicine.quantity, medicine.price, medicine.description))
+        for idx, medicine in enumerate(filtered_medicines):
+            self.stock_table.insert("", "end", iid=idx, values=(medicine.name, medicine.quantity, medicine.price, medicine.description))
 
     def add_medicine_row(self):
-        # Вікно для додавання нового запису ліків
         new_medicine_window = ttk.Toplevel(self.root)
         new_medicine_window.title("Додати ліки")
         new_medicine_window.configure(bg="#4B0082")
-        new_medicine_window.geometry("500x200")
+        new_medicine_window.geometry("500x300")
         
-        self.root.update_idletasks()
         x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 250
-        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 200
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 150
         new_medicine_window.geometry(f"+{x}+{y}")
 
         new_medicine_window.grab_set()
@@ -191,15 +180,14 @@ class PharmacyAppInterface:
         description_entry = tk.Text(new_medicine_window, height=4, width=40)
         description_entry.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
 
-        # Збереження нового запису ліків
         def save_medicine():
             name = name_entry.get()
             quantity = quantity_entry.get()
             price = price_entry.get()
             description = description_entry.get("1.0", "end").strip()
+            
             if name and quantity.isdigit() and price.replace('.', '', 1).isdigit():
                 self.medicine_list.add_medicine(name, int(quantity), float(price), description)
-                self.save_medicines_to_file()
                 self.load_medicines_to_table()
                 new_medicine_window.destroy()
             else:
@@ -208,65 +196,19 @@ class PharmacyAppInterface:
         save_button = ttk.Button(new_medicine_window, text="Зберегти", bootstyle=SUCCESS, command=save_medicine)
         save_button.grid(row=4, column=0, columnspan=2, pady=10, sticky="nsew")
 
-    def add_medicine_to_order(self):
-        add_order_window = ttk.Toplevel(self.root)
-        add_order_window.title("Додати товар в замовлення")
-        add_order_window.geometry("400x250")
-        add_order_window.configure(bg="#4B0082")
-
-        self.root.update_idletasks()
-        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 200
-        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 125
-        add_order_window.geometry(f"+{x}+{y}")
-
-        add_order_window.grab_set()
-        add_order_window.focus_set()
-
-        ttk.Label(add_order_window, text="Оберіть товар:", background="#4B0082", foreground="white").pack(pady=10)
-        selected_medicine = tk.StringVar(add_order_window)
-        available_medicines = [med for med in self.medicine_list.get_medicines()]
-        if not available_medicines:
-            messagebox.showerror("Помилка", "Немає товарів для додавання в замовлення.")
-            add_order_window.destroy()
-            return
-
-        medicine_menu = ttk.OptionMenu(add_order_window, selected_medicine, available_medicines[0].name, *[med.name for med in available_medicines])
-        medicine_menu.pack(pady=5)
-
-        ttk.Label(add_order_window, text="Кількість (шт)", background="#4B0082", foreground="white").pack(pady=10)
-        quantity_entry = ttk.Entry(add_order_window)
-        quantity_entry.pack(pady=5)
-
-        def confirm_addition():
-            name = selected_medicine.get()
-            quantity = quantity_entry.get()
-            if quantity.isdigit():
-                quantity = int(quantity)
-                current_qty = next((med.quantity for med in available_medicines if med.name == name), "Не визначено")
-                self.order_table.insert("", "end", values=(name, current_qty, quantity))
-                add_order_window.destroy()
-            else:
-                messagebox.showerror("Помилка", "Введіть коректну кількість.")
-
-        confirm_button = ttk.Button(add_order_window, text="Додати", command=confirm_addition, bootstyle=SUCCESS)
-        confirm_button.pack(pady=10)
+        new_medicine_window.grid_rowconfigure(5, weight=1)
+        new_medicine_window.grid_columnconfigure(1, weight=1)
 
     def edit_item(self, event):
-        selected_item = event.widget.selection()
+        selected_item = self.stock_table.selection()
         if not selected_item:
             return
+        item_name = selected_item[0]
+        medicine = next((med for med in self.medicine_list.get_medicines() if med.name == item_name), None)
+        if medicine:
+            self.open_full_edit_window(medicine)
 
-        item = event.widget.item(selected_item)
-        values = item["values"]
-
-        if hasattr(self, 'stock_table') and event.widget == self.stock_table:
-            self.open_full_edit_window(values)  # Відкриває інтерфейс для повної зміни
-        elif hasattr(self, 'order_table') and event.widget == self.order_table:
-            self.open_quantity_edit_window(values)  # Відкиває інтерфейс для зміни кількості
-
-    def open_full_edit_window(self, values):
-        name, quantity, price, description = values
-
+    def open_full_edit_window(self, medicine):
         edit_window = ttk.Toplevel(self.root)
         edit_window.title("Редагувати ліки (Повне)")
         edit_window.geometry("370x250")
@@ -281,22 +223,22 @@ class PharmacyAppInterface:
 
         ttk.Label(edit_window, text="Назва:", background="#4B0082", foreground="white").grid(row=0, column=0, padx=10, pady=5, sticky="e")
         name_entry = ttk.Entry(edit_window)
-        name_entry.insert(0, name)
+        name_entry.insert(0, medicine.name)
         name_entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
 
         ttk.Label(edit_window, text="Кількість (шт)", background="#4B0082", foreground="white").grid(row=1, column=0, padx=10, pady=5, sticky="e")
         quantity_entry = ttk.Entry(edit_window)
-        quantity_entry.insert(0, quantity)
+        quantity_entry.insert(0, medicine.quantity)
         quantity_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
         ttk.Label(edit_window, text="Ціна:", background="#4B0082", foreground="white").grid(row=2, column=0, padx=10, pady=5, sticky="e")
         price_entry = ttk.Entry(edit_window)
-        price_entry.insert(0, price)
+        price_entry.insert(0, medicine.price)
         price_entry.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
 
         ttk.Label(edit_window, text="Опис:", background="#4B0082", foreground="white").grid(row=3, column=0, padx=10, pady=5, sticky="e")
         description_entry = tk.Text(edit_window, height=4, width=40)
-        description_entry.insert("1.0", description)
+        description_entry.insert("1.0", medicine.description)
         description_entry.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
 
         def save_full_changes():
@@ -306,15 +248,11 @@ class PharmacyAppInterface:
             new_description = description_entry.get("1.0", "end").strip()
 
             if new_quantity.isdigit() and new_price.replace('.', '', 1).isdigit():
-                new_quantity = int(new_quantity)
-                new_price = float(new_price)
-                for medicine in self.medicine_list.get_medicines():
-                    if medicine.name == name:
-                        medicine.name = new_name
-                        medicine.quantity = new_quantity
-                        medicine.price = new_price
-                        medicine.description = new_description
-                        break
+                medicine.name = new_name
+                medicine.quantity = int(new_quantity)
+                medicine.price = float(new_price)
+                medicine.description = new_description
+
                 self.save_medicines_to_file()
                 self.load_medicines_to_table()
                 edit_window.destroy()
@@ -324,62 +262,14 @@ class PharmacyAppInterface:
         save_button = ttk.Button(edit_window, text="Зберегти", bootstyle=SUCCESS, command=save_full_changes)
         save_button.grid(row=4, column=0, columnspan=2, pady=10, sticky="nsew")
 
-    def open_quantity_edit_window(self, values):
-        name, current_qty, order_qty = values
-
-        edit_window = ttk.Toplevel(self.root)
-        edit_window.title("Редагувати кількість для замовлення (шт)")
-        edit_window.geometry("344x170")
-        edit_window.configure(bg="#4B0082")
-
-        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 200
-        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 100
-        edit_window.geometry(f"+{x}+{y}")
-
-        edit_window.grab_set()
-        edit_window.focus_set()
-
-        ttk.Label(edit_window, text="Назва:", background="#4B0082", foreground="white").grid(row=0, column=0, padx=10, pady=5, sticky="e")
-        ttk.Label(edit_window, text=name, background="#4B0082", foreground="white").grid(row=0, column=1, padx=10, pady=5, sticky="w")
-
-        ttk.Label(edit_window, text="Кількість для замовлення (шт):", background="#4B0082", foreground="white").grid(row=1, column=0, padx=10, pady=5, sticky="e")
-        quantity_entry = ttk.Entry(edit_window)
-        quantity_entry.insert(0, order_qty)
-        quantity_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
-
-        def save_quantity_changes(selected_item):
-            new_order_qty = quantity_entry.get()
-            if new_order_qty.isdigit():
-                new_order_qty = int(new_order_qty)
-                self.order_table.item(selected_item, values=(name, current_qty, new_order_qty))
-                edit_window.destroy()
-            else:
-                messagebox.showerror("Помилка", "Введіть корректну кількість!", parent=edit_window)
-
-        save_button = ttk.Button(edit_window, text="Зберегти", bootstyle=SUCCESS, command=lambda: save_quantity_changes(self.order_table.selection()))
-        save_button.grid(row=2, column=0, columnspan=2, pady=10, sticky="nsew")
-
-        def delete_item():
-            selected_item = self.order_table.selection()
-            if selected_item:
-                self.order_table.delete(selected_item)
-                edit_window.destroy()
-
-        delete_button = ttk.Button(edit_window, text="Видалити", bootstyle=DANGER, command=delete_item)
-        delete_button.grid(row=3, column=0, columnspan=2, pady=10, sticky="nsew")
-
     def delete_selected_rows(self):
         selected_items = self.stock_table.selection()
         if not selected_items:
             messagebox.showwarning("Попередження", "Виберіть рядок для видалення")
         else:
             for item in selected_items:
-                item_values = self.stock_table.item(item, "values")
-                item_name = item_values[0]
-                for idx, medicine in enumerate(self.medicine_list.get_medicines()):
-                    if medicine.name == item_name:
-                        self.medicine_list.remove_medicine(idx)
-                        break
+                item_name = item
+                self.medicine_list.medicines = [med for med in self.medicine_list.get_medicines() if med.name != item_name]
                 self.stock_table.delete(item)
             self.save_medicines_to_file()
 
@@ -415,6 +305,48 @@ class PharmacyAppInterface:
         back_button.pack(pady=5)
 
         self.order_table.bind("<Double-1>", self.edit_item)
+
+    def add_medicine_to_order(self):
+        add_order_window = ttk.Toplevel(self.root)
+        add_order_window.title("Додати товар в замовлення")
+        add_order_window.geometry("400x250")
+        add_order_window.configure(bg="#4B0082")
+
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - 200
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - 125
+        add_order_window.geometry(f"+{x}+{y}")
+
+        add_order_window.grab_set()
+        add_order_window.focus_set()
+
+        ttk.Label(add_order_window, text="Оберіть товар:", background="#4B0082", foreground="white").pack(pady=10)
+        selected_medicine = tk.StringVar(add_order_window)
+        available_medicines = [med for med in self.medicine_list.get_medicines()]
+        if not available_medicines:
+            messagebox.showerror("Помилка", "Немає товарів для додавання в замовлення.")
+            add_order_window.destroy()
+            return
+
+        medicine_menu = ttk.OptionMenu(add_order_window, selected_medicine, available_medicines[0].name, *[med.name for med in available_medicines])
+        medicine_menu.pack(pady=5)
+
+        ttk.Label(add_order_window, text="Кількість (шт)", background="#4B0082", foreground="white").pack(pady=10)
+        quantity_entry = ttk.Entry(add_order_window)
+        quantity_entry.pack(pady=5)
+
+        def confirm_addition():
+            name = selected_medicine.get()
+            quantity = quantity_entry.get()
+            if quantity.isdigit():
+                quantity = int(quantity)
+                current_qty = next((med.quantity for med in available_medicines if med.name == name), "Не визначено")
+                self.order_table.insert("", "end", values=(name, current_qty, quantity))
+                add_order_window.destroy()
+            else:
+                messagebox.showerror("Помилка", "Введіть коректну кількість.")
+
+        confirm_button = ttk.Button(add_order_window, text="Додати", command=confirm_addition, bootstyle=SUCCESS)
+        confirm_button.pack(pady=10)
 
     def load_order_table(self):
         self.order_table.delete(*self.order_table.get_children())
@@ -455,14 +387,14 @@ class PharmacyAppInterface:
                     medicine.quantity += order_qty
                     break
             else:
-                self.medicine_list.add_medicine(name, order_qty, 0)
+                self.medicine_list.add_medicine(Medicine(name=name, quantity=order_qty, price=0, description=""))
 
         self.save_medicines_to_file()
         self.load_medicines_to_table()
         os.remove("orders.json")
         messagebox.showinfo("Інформація", "Склад успішно поповнено згідно з замовленням.")
 
-        if __name__ == "__main__":
-            root = tk.Tk()
-            app = PharmacyAppInterface(root)
-            root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = PharmacyAppInterface(root)
+    root.mainloop()
