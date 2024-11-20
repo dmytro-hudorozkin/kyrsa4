@@ -1,5 +1,3 @@
-# pharmacy_app/models/supplier.py
-
 class Supplier:
     def __init__(self, name: str, contact_info: str):
         self.name = name

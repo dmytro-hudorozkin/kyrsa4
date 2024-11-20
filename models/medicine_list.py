@@ -27,7 +27,6 @@ class MedicineList:
         return self.medicines
 
     def save_medicines_to_file(self):
-        """Зберігає список ліків у файл JSON."""
         medicines_data = [
             {
                 "name": med.name,

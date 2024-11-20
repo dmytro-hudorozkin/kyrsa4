@@ -1,11 +1,9 @@
-# kyrsa4/models/medicine.py
-
 class Medicine:
     def __init__(self, name, quantity, price, description="Опис відсутній"):
         self.name = name
         self.quantity = quantity
         self.price = price
-        self.description = description  # Добавлено поле description
+        self.description = description
 
 
     def __str__(self):

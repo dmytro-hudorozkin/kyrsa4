@@ -8,9 +8,11 @@ import json
 import os
 
 class PharmacyAppInterface:
-    def __init__(self, root):
+    def __init__(self, root, medicines_file_path="medicines.json"):
         self.root = root
         self.root.title("Облік ліків")
+        self.order_file_path = "orders.json"
+        self.medicines_file_path = medicines_file_path 
 
         window_width = 900
         window_height = 600
@@ -29,8 +31,8 @@ class PharmacyAppInterface:
         self.init_main_menu()
 
     def load_medicines_from_file(self):
-        if os.path.exists("medicines.json"):
-            with open("medicines.json", "r", encoding="utf-8") as f:
+        if os.path.exists(self.medicines_file_path):
+            with open(self.medicines_file_path, "r", encoding="utf-8") as f:
                 medicines_data = json.load(f)
             self.medicine_list.medicines = [
                 Medicine(
@@ -52,7 +54,7 @@ class PharmacyAppInterface:
                 "description": med.description
             } for med in self.medicine_list.get_medicines()
         ]
-        with open("medicines.json", "w", encoding="utf-8") as f:
+        with open(self.medicines_file_path, "w", encoding="utf-8") as f:
             json.dump(medicines_data, f, indent=4, ensure_ascii=False)
 
     def init_main_menu(self):
@@ -371,11 +373,12 @@ class PharmacyAppInterface:
             messagebox.showwarning("Попередження", "Будь ласка, введіть кількість для замовлення.")
 
     def replenish_stock_from_order(self):
-        if not os.path.exists("orders.json"):
+        """Пополнение склада на основе файла заказов."""
+        if not os.path.exists(self.order_file_path):
             messagebox.showinfo("Інформація", "Немає доступних замовлень для поповнення.")
             return
 
-        with open("orders.json", "r", encoding="utf-8") as file:
+        with open(self.order_file_path, "r", encoding="utf-8") as file:
             orders = json.load(file)
 
         for order in orders:
@@ -387,13 +390,13 @@ class PharmacyAppInterface:
                     medicine.quantity += order_qty
                     break
             else:
-                self.medicine_list.add_medicine(Medicine(name=name, quantity=order_qty, price=0, description=""))
+                self.medicine_list.add_medicine(name, order_qty, price=0, description="")
 
         self.save_medicines_to_file()
         self.load_medicines_to_table()
-        os.remove("orders.json")
+        os.remove(self.order_file_path) 
         messagebox.showinfo("Інформація", "Склад успішно поповнено згідно з замовленням.")
-
+ 
 if __name__ == "__main__":
     root = tk.Tk()
     app = PharmacyAppInterface(root)

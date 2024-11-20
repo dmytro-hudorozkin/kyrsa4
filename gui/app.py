@@ -1,5 +1,3 @@
-# kyrsa4/gui/app.py
-
 import tkinter as tk
 from gui.interface import PharmacyAppInterface
 
