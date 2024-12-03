@@ -6,9 +6,8 @@ class HelpWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("Допомога")
-        self.root.configure(bg="#3e0069")  # Фіолетовий фон
+        self.root.configure(bg="#3e0069")
 
-        # Задаємо розмір вікна і розташовуємо його по центру
         window_width, window_height = 520, 600
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -16,7 +15,6 @@ class HelpWindow:
         position_y = (screen_height // 2) - (window_height // 2)
         self.root.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
 
-        # Створення фрейму з прокруткою
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=1)
 
@@ -29,13 +27,11 @@ class HelpWindow:
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
-        # Додавання прокрутки колесом миші
         canvas.bind_all("<MouseWheel>", lambda event: self._on_mousewheel(canvas, event))
 
         help_frame = ttk.Frame(canvas)
         canvas.create_window((0, 0), window=help_frame, anchor="nw")
 
-        # Додавання фотографій і описів
         self.add_help_content(help_frame)
 
     def add_help_content(self, frame):
@@ -47,21 +43,17 @@ class HelpWindow:
         ]
 
         for idx, (img_path, description) in enumerate(images_info, start=1):
-            # Завантаження зображення та зміна його розміру
             image = Image.open(img_path)
-            image.thumbnail((400, 300))  # Зміна розміру зображення
+            image.thumbnail((400, 300)) 
             photo = ImageTk.PhotoImage(image)
 
-            # Додавання рамки для зображення
             image_label_frame = ttk.Frame(frame, style="Image.TFrame")
             image_label_frame.pack(pady=10)
 
-            # Додавання зображення з рамкою
             image_label = ttk.Label(image_label_frame, image=photo)
             image_label.image = photo
             image_label.pack(padx=10, pady=10)
 
-            # Додавання тексту під фото
             description_label = tk.Label(frame, text=description, font=("Calibri", 12), wraplength=500, justify="center", fg="white", bg="#3e0069")
             description_label.pack(pady=(0, 20))
 
