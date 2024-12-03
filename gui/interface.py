@@ -6,6 +6,7 @@ from tkinter import messagebox
 import tkinter as tk
 import json
 import os
+from gui.help import HelpWindow
 
 class PharmacyAppInterface:
     def __init__(self, root, medicines_file_path="medicines.json"):
@@ -78,6 +79,9 @@ class PharmacyAppInterface:
             style_name = 'Exit.TButton' if text == "Вийти" else 'Custom.TButton'
             button = ttk.Button(self.root, text=text, command=command, bootstyle=bootstyle, style=style_name)
             button.pack(pady=10, ipadx=20, ipady=15)
+
+        help_button = ttk.Button(self.root, text="Допомога", command=self.open_help_window, bootstyle="secondary")
+        help_button.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-10)  # Позиціонуємо в правому нижньому кутку
 
     def open_stock_page(self):
         for widget in self.root.winfo_children():
@@ -152,6 +156,10 @@ class PharmacyAppInterface:
         self.stock_table.delete(*self.stock_table.get_children())
         for idx, medicine in enumerate(filtered_medicines):
             self.stock_table.insert("", "end", iid=idx, values=(medicine.name, medicine.quantity, medicine.price, medicine.description))
+
+    def open_help_window(self):
+        help_window = tk.Toplevel(self.root)
+        HelpWindow(help_window)
 
     def add_medicine_row(self):
         new_medicine_window = ttk.Toplevel(self.root)
